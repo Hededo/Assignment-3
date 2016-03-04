@@ -22,7 +22,7 @@
     <ProjectGUID>{C67B45A1-6560-3AAD-971B-D2AEAC3CEE5C}</ProjectGUID>
     <Keyword>Win32Proj</Keyword>
     <Platform>Win32</Platform>
-    <ProjectName>Assignment1</ProjectName>
+    <ProjectName>Assignment3</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -277,8 +277,7 @@
     <Text Include="skybox.vs.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Assignment2.cpp" />
-    <ClCompile Include="src\cubemapenv.cpp" />
+    <ClCompile Include="src\Assignment3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="face.ktx" />
