@@ -1,9 +1,8 @@
 ﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (gettingStarted.dir\Debug\) contains files shared from another project (Assignment1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   Assignment3.cpp
 D:\Local Docs\Code\CS 5610\Assignment-3\include\vmath.h(1022): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-src\Assignment3.cpp(770): warning C4305: '+=': truncation from 'double' to 'float'
-src\Assignment3.cpp(776): warning C4305: '-=': truncation from 'double' to 'float'
-  LINK : bin\gettingStarted_d.exe not found or not built by the last incremental link; performing full link
+Assignment3.cpp(556): warning C4305: '+=': truncation from 'double' to 'float'
+Assignment3.cpp(562): warning C4305: '-=': truncation from 'double' to 'float'
 sb7_d.lib(sb7.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
 sb7_d.lib(sb7ktx.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7ktx.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
 sb7_d.lib(sb7object.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7object.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info

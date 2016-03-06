@@ -277,12 +277,15 @@
     <Text Include="skybox.vs.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Assignment3.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="face.ktx" />
     <None Include="mountaincube.ktx" />
     <None Include="pattern1.ktx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="objObject.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Assignment3.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
