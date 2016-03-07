@@ -25,7 +25,7 @@ public:
 		verticies = new std::vector<GLfloat>;
 		normals = new std::vector<GLfloat>;
 		vertexCount = 0;
-		createFromFile();
+		CreateFromFile();
 	}
 
 	ObjObject::~ObjObject()
@@ -36,8 +36,30 @@ public:
 		normals = NULL;
 	}
 
+	void ObjObject::BindBuffers()
+	{
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glEnableVertexAttribArray(0); //enable or disable a generic vertex attribute array
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0); //define an array of generic vertex attribute data void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+
+		glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);
+		glEnableVertexAttribArray(1); //enable or disable a generic vertex attribute array
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0); //define an array of generic vertex attribute data void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glEnableVertexAttribArray(2); //enable or disable a generic vertex attribute array
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0); //define an array of generic vertex attribute data void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+	}
+
+	void ObjObject::Draw()
+	{
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount * 4);
+	}
+
 private:
-	void ObjObject::createFromFile()
+	void ObjObject::CreateFromFile()
 	{
 		std::ifstream file = std::ifstream(fileName);
 		std::string line;
@@ -83,11 +105,12 @@ private:
 		glGenVertexArrays(1, &vao);  //glGenVertexArrays(n, &array) returns n vertex array object names in arrays
 		glBindVertexArray(vao); //glBindVertexArray(array) binds the vertex array object with name array.
 
+		GLuint bufferSize = verticies->size() * sizeof(GLfloat);
 #pragma region Cube Pos Buffer
 		glGenBuffers(1, &vertexbuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glBufferData(GL_ARRAY_BUFFER,
-			sizeof(verticies->data()),
+			bufferSize,
 			verticies->data(),
 			GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -97,7 +120,7 @@ private:
 		glGenBuffers(1, &colorBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 		glBufferData(GL_ARRAY_BUFFER,
-			sizeof(verticies->data()),
+			bufferSize,
 			verticies->data(),
 			GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -107,7 +130,7 @@ private:
 		glGenBuffers(1, &normalsBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);
 		glBufferData(GL_ARRAY_BUFFER,
-			sizeof(normals->data()),
+			bufferSize,
 			normals->data(),
 			GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -16,8 +16,6 @@
 #include "objObject.cpp"
 
 #define PI 3.14159265
-#define MANY_OBJECTS 1
-#undef MANY_OBJECTS
 
 class assignment3_app : public sb7::application
 {
@@ -26,10 +24,7 @@ class assignment3_app : public sb7::application
 #pragma region protected
 public:
 	assignment3_app()
-		: per_fragment_program(0),
-		checkerFloorProgram(0),
-		tex_index(0),
-		render_prog(0)
+		: per_fragment_program(0)
 	{
 	}
 #pragma endregion
@@ -70,7 +65,6 @@ protected:
 	GLuint          tex_object[2];
 	GLuint          tex_index;
 	GLuint          tex_envmap;
-	GLuint          face_envmap;
 
 	//Where uniforms are defined
 	struct uniforms_block
@@ -89,8 +83,6 @@ protected:
 	float           colorPercent = 0.2f;
 
 	GLuint          uniforms_buffer;
-
-	sb7::object     object;
 
 	// Variables for mouse interaction
 	bool bPerVertex;
@@ -122,29 +114,9 @@ const vmath::vec4 trueVec = vmath::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 #pragma endregion
 
 #pragma region Vertex Data
-#define B 0x00, 0x00, 0x00, 0x00
-#define W 0xFF, 0xFF, 0xFF, 0xFF
-const GLubyte tex_data[16 * 16 * 4] =
-{
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-	B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-	W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B
-};
-#undef B
-#undef W
+ObjObject * cube;
+ObjObject * sphere;
+ObjObject * teapot;
 
 #pragma endregion
 
@@ -171,12 +143,6 @@ private:
 	float iLightPosY = 0.5f;
 	float iLightPosZ = 0.3f;
 	vmath::vec4 lightPos = vmath::vec4(iLightPosX, iLightPosY, iLightPosZ, 1.0f);
-
-	GLuint sphere_vao;
-
-	ObjObject * cube;
-	ObjObject * sphere;
-	ObjObject * teapot;
 #pragma endregion
 };
 
@@ -187,32 +153,6 @@ void assignment3_app::startup()
 	cube = new ObjObject("bin\\media\\objects\\cube.obj");
 	sphere = new ObjObject("bin\\media\\objects\\sphere.obj");
 	teapot = new ObjObject("bin\\media\\objects\\wt_teapot.obj");
-
-
-#pragma region Sphere vertex data
-	glGenVertexArrays(1, &sphere_vao);
-	glBindVertexArray(sphere_vao);
-	object.load("bin\\media\\objects\\sphere.sbm");
-#pragma endregion
-
-#pragma region Bind Floor Texture
-	// Generate a name for the texture
-	glGenTextures(1, &tex_object[0]);
-	// Now bind it to the context using the GL_TEXTURE_2D binding point
-	glBindTexture(GL_TEXTURE_2D, tex_object[0]);
-	// Specify the amount of storage we want to use for the texture
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, 16, 16);
-	// Assume the texture is already bound to the GL_TEXTURE_2D target
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
-
-	tex_object[1] = sb7::ktx::file::load("pattern1.ktx");
-#pragma endregion
-
-#pragma region Bind envMap Texture
-	tex_envmap = sb7::ktx::file::load("mountaincube.ktx");
-	face_envmap = sb7::ktx::file::load("face.ktx");
-#pragma endregion
-
 
 #pragma region Buffer For Uniform Block
 	glGenBuffers(1, &uniforms_buffer);
@@ -289,8 +229,6 @@ void assignment3_app::render(double currentTime)
 
 	glViewport(0, 0, info.windowWidth, info.windowHeight);
 
-	glBindTexture(GL_TEXTURE_2D, tex_object[tex_index]);
-
 	// Create sky blue background
 	glClearBufferfv(GL_COLOR, 0, skyBlue);
 	glClearBufferfv(GL_DEPTH, 0, ones);
@@ -314,115 +252,30 @@ void assignment3_app::render(double currentTime)
 	block->colorPercent = vmath::vec4(colorPercent, colorPercent, colorPercent, colorPercent);
 #pragma endregion
 
-	glUseProgram(render_prog);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, tex_envmap);
-#pragma region Draw Semi-Reflective Sphere
-	glBindVertexArray(sphere_vao);
-	glUnmapBuffer(GL_UNIFORM_BUFFER);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-
-
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-	vmath::mat4 model_matrix =
-		//vmath::translate(-9.3f, -16.0f, 1.0f) *
-		vmath::translate(10.0f, -6.3f, -1.0f) *
-		vmath::scale(6.0f);
-	block->model_matrix = model_matrix;
-	block->mv_matrix = view_matrix * model_matrix;
-	block->view_matrix = view_matrix;
-	block->uni_color = orange;
-	block->useUniformColor = trueVec;
-	block->invertNormals = falseVec;
-
-	glCullFace(GL_BACK);
-	object.render();
-#pragma endregion
-
-#pragma region Draw Reflective Sphere
-	glBindVertexArray(sphere_vao);
-	
-	glUnmapBuffer(GL_UNIFORM_BUFFER);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-    model_matrix =
-		vmath::translate(-9.3f, -13.0f, 1.0f) *
-		vmath::scale(6.0f);
-	block->model_matrix = model_matrix;
-	block->mv_matrix = view_matrix * model_matrix;
-	block->view_matrix = view_matrix;
-	block->uni_color = purple;
-	block->useUniformColor = falseVec;
-	block->invertNormals = falseVec;
-
-	object.render();
-#pragma endregion
-
-	glUnmapBuffer(GL_UNIFORM_BUFFER); //release the mapping of a buffer object's data store into the client's address space
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-
 #pragma region Uniforms that remain constant for cubes
 	block->uni_color = orange;
 	block->useUniformColor = falseVec;
 #pragma endregion
 
 #pragma region bind cube vertex data
-	glBindVertexArray(cube->vao);
-
-	glBindBuffer(GL_ARRAY_BUFFER, cube->vertexbuffer);
-	glEnableVertexAttribArray(0); //enable or disable a generic vertex attribute array
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0); //define an array of generic vertex attribute data void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
-
-	glBindBuffer(GL_ARRAY_BUFFER, cube->normalsBuffer);
-	glEnableVertexAttribArray(1); //enable or disable a generic vertex attribute array
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0); //define an array of generic vertex attribute data void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
-
-	glBindBuffer(GL_ARRAY_BUFFER, cube->colorBuffer);
-	glEnableVertexAttribArray(2); //enable or disable a generic vertex attribute array
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0); //define an array of generic vertex attribute data void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+	cube->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 #pragma endregion
 
-	glUseProgram(checkerFloorProgram);
-#pragma region Draw Floor
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glBindTexture(GL_TEXTURE_2D, tex_object[0]);
-	glUnmapBuffer(GL_UNIFORM_BUFFER); //release the mapping of a buffer object's data store into the client's address space
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-
-	model_matrix =
-		//vmath::rotate((float)currentTime * 14.5f, 0.0f, 1.0f, 0.0f) * //used to constantly rotate
-		vmath::translate(vmath::vec3(0.0f, -22.5f, 0.0f)) * 
-		vmath::rotate(45.0f, 0.0f, 1.0f, 0.0f)*
-		vmath::scale(vmath::vec3(30.0f, 0.0f, 30.0f));
-	block->model_matrix = model_matrix;
-	block->mv_matrix = view_matrix * model_matrix;
-	block->view_matrix = view_matrix;
-	block->invertNormals = trueVec;
-	block->uni_color = gray;
-
-	glCullFace(GL_FRONT);
-	glDrawArrays(GL_TRIANGLES, 0, cube->vertexCount * 4);
-
 #pragma endregion
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	glUseProgram(skybox_prog);
+	glUseProgram(per_fragment_program);
 #pragma region Draw Face Cube
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP, face_envmap);
 	glUnmapBuffer(GL_UNIFORM_BUFFER); //release the mapping of a buffer object's data store into the client's address space
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
-	model_matrix =
+	vmath::mat4 model_matrix =
 		vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
 		vmath::translate(10.0f, -17.3f, -1.0f) *
 		vmath::scale(5.0f);
@@ -433,37 +286,11 @@ void assignment3_app::render(double currentTime)
 	block->invertNormals = trueVec;
 
 	glCullFace(GL_BACK);
-	glDrawArrays(GL_TRIANGLES, 0, cube->vertexCount * 4);
+	cube->Draw();
 #pragma endregion
 
-	
-	//glUseProgram(skybox_prog);
-#pragma region Draw Skybox
-	glBindTexture(GL_TEXTURE_CUBE_MAP, tex_envmap);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
-	
-	glUnmapBuffer(GL_UNIFORM_BUFFER); //release the mapping of a buffer object's data store into the client's address space
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-
-	model_matrix =
-		vmath::translate(0.0f, 0.0f, 0.0f) *
-		vmath::scale(150.0f);
-	block->model_matrix = model_matrix;
-	block->mv_matrix = view_matrix * model_matrix;
-	block->view_matrix = view_matrix;
-
-	glCullFace(GL_FRONT);
-	glDrawArrays(GL_TRIANGLES, 0, cube->vertexCount * 4);
-#pragma endregion
 }
 
-/*
-	Makes two separate programs that uses either perFragment or perVertex phong lighting by reading shader code from files. 
-	From Phonglighting.cpp
-*/
 void assignment3_app::load_shaders()
 {
 	GLuint vs;
@@ -477,51 +304,12 @@ void assignment3_app::load_shaders()
 		glDeleteProgram(per_fragment_program);
 	}
 
-
 	per_fragment_program = glCreateProgram();
 	glAttachShader(per_fragment_program, vs);
 	glAttachShader(per_fragment_program, fs);
 	glLinkProgram(per_fragment_program);
 
-	vs = sb7::shader::load("floor.vs.txt", GL_VERTEX_SHADER);
-	fs = sb7::shader::load("floor.fs.txt", GL_FRAGMENT_SHADER);
 
-	if (checkerFloorProgram)
-	{
-		glDeleteProgram(checkerFloorProgram);
-	}
-
-	checkerFloorProgram = glCreateProgram();
-	glAttachShader(checkerFloorProgram, vs);
-	glAttachShader(checkerFloorProgram, fs);
-	glLinkProgram(checkerFloorProgram);
-
-	//________________________________________________________________
-	if (render_prog)
-		glDeleteProgram(render_prog);
-
-	vs = sb7::shader::load("render.vs.txt", GL_VERTEX_SHADER);
-	fs = sb7::shader::load("render.fs.txt", GL_FRAGMENT_SHADER);
-
-	render_prog = glCreateProgram();
-	glAttachShader(render_prog, vs);
-	glAttachShader(render_prog, fs);
-	glLinkProgram(render_prog);
-
-	glDeleteShader(vs);
-	glDeleteShader(fs);
-
-	vs = sb7::shader::load("skybox.vs.txt", GL_VERTEX_SHADER);
-	fs = sb7::shader::load("skybox.fs.txt", GL_FRAGMENT_SHADER);
-
-	skybox_prog = glCreateProgram();
-	glAttachShader(skybox_prog, vs);
-	glAttachShader(skybox_prog, fs);
-	glLinkProgram(skybox_prog);
-
-	glDeleteShader(vs);
-	glDeleteShader(fs);
-	//___________________________________________________________
 }
 
 #pragma region Event Handlers
