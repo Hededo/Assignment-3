@@ -162,7 +162,6 @@ void assignment3_app::startup()
 
 #pragma region OPENGL Settings
 
-	glEnable(GL_CULL_FACE); // Use face culling to see into the room.
     glFrontFace(GL_CW); //glFrontFace(GLenum mode) In a scene composed entirely of opaque closed surfaces, back-facing polygons are never visible.
 	glEnable(GL_DEPTH_TEST); //glEnable(GLenum cap) glEnable and glDisable enable and disable various capabilities.
 	glDepthFunc(GL_LEQUAL);	//glDepthFunc(GLenum func) specifies the function used to compare each incoming pixel depth value with the depth value present in the depth buffer. 
@@ -266,8 +265,6 @@ void assignment3_app::render(double currentTime)
 #pragma endregion
 
 #pragma endregion
-
-	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glUseProgram(per_fragment_program);
 #pragma region Draw Face Cube
 
@@ -275,15 +272,17 @@ void assignment3_app::render(double currentTime)
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
+	//vmath::mat4 model_matrix =
+	//	vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
+	//	vmath::translate(10.0f, -17.3f, -1.0f) *
+	//	vmath::scale(5.0f);
 	vmath::mat4 model_matrix =
-		vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
-		vmath::translate(10.0f, -17.3f, -1.0f) *
 		vmath::scale(5.0f);
 	block->model_matrix = model_matrix;
 	block->mv_matrix = view_matrix * model_matrix;
 	block->view_matrix = view_matrix;
-	block->useUniformColor = falseVec;
-	block->invertNormals = trueVec;
+	block->useUniformColor = trueVec;
+	block->invertNormals = falseVec;
 
 	glCullFace(GL_BACK);
 	cube->Draw();

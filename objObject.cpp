@@ -2,8 +2,39 @@
 
 //libraries go here:
 #include <sb7.h>
+#include <vmath.h>
 #include <string>
 #include <vector>
+#include <cctype>
+
+std::vector<int> IntsInString(std::string str)
+{
+	std::vector<int> toReturn;
+	std::string temp = "";
+
+	for (char& c : str)
+	{
+		if (std::isdigit(c))
+		{
+			temp += c;
+		}
+		else
+		{
+			if (temp != "")
+			{
+				toReturn.push_back(std::stoi(temp));
+			}
+			temp = "";
+		}
+	}
+
+	if (temp != "")
+	{
+		toReturn.push_back(std::stoi(temp));
+	}
+
+	return toReturn;
+}
 
 class ObjObject
 {
@@ -55,52 +86,99 @@ public:
 
 	void ObjObject::Draw()
 	{
-		glDrawArrays(GL_TRIANGLES, 0, vertexCount * 4);
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount * elementsInVec);
 	}
 
 private:
+	GLint elementsInVec = 4;
 	void ObjObject::CreateFromFile()
 	{
 		std::ifstream file = std::ifstream(fileName);
 		std::string line;
+
+		std::vector<vmath::vec3> * objVecticies = new std::vector<vmath::vec3>;
+		std::vector<vmath::vec3> * objNormals = new std::vector<vmath::vec3>;
+
+		std::vector<GLfloat> * faceVerticiesIndex = new std::vector<GLfloat>;
+		std::vector<GLfloat> * faceNormalIndex = new std::vector<GLfloat>;
+
 		while (std::getline(file, line))
 		{
 			std::stringstream stream(line);
 			std::string firstWord;
 			stream >> firstWord;
 			std::string a, b, c;
+			std::vector<int> vert0, vert1, vert2;
+			int vertexIndex, normalIndex;
 
 			bool matches = (std::strcmp(firstWord.c_str(), "v")) == 0;
 			if (matches)
 			{
 				stream >> a >> b >> c;
-				verticies->push_back(std::stof(a));
-				verticies->push_back(std::stof(b));
-				verticies->push_back(std::stof(c));
-				verticies->push_back(1.0f);
-				vertexCount += 1;
+				objVecticies->push_back(vmath::vec3(std::stof(a), std::stof(b), std::stof(c)));
 				continue;
 			}
 			matches = (std::strcmp(firstWord.c_str(), "vn")) == 0;
 			if (matches)
 			{
 				stream >> a >> b >> c;
-				normals->push_back(std::stof(a));
-				normals->push_back(std::stof(b));
-				normals->push_back(std::stof(c));
-				normals->push_back(1.0f);
+				objNormals->push_back(vmath::vec3(std::stof(a), std::stof(b), std::stof(c)));
 				continue;
 			}
 			matches = (std::strcmp(firstWord.c_str(), "f")) == 0;
 			if (matches)
 			{
-				break;
+				stream >> a >> b >> c;
+				vert0 = IntsInString(a);
+				vert1 = IntsInString(b);
+				vert2 = IntsInString(c);
+
+				//Decrement each index by 1 because OBJ indexs start at 1, not 0 like c++
+				faceVerticiesIndex->push_back(vert0.at(0) - 1);
+				faceNormalIndex->push_back(vert0.at(1) - 1);
+				faceVerticiesIndex->push_back(vert1.at(0) - 1);
+				faceNormalIndex->push_back(vert1.at(1) - 1);
+				faceVerticiesIndex->push_back(vert2.at(0) - 1);
+				faceNormalIndex->push_back(vert2.at(1) - 1);
+				continue;
 			}
 			else
 			{
 				continue;
 			}
 		}
+
+		for (int i = 0; i < faceVerticiesIndex->size(); i++)
+		{
+			int index = faceVerticiesIndex->at(i);
+			vmath::vec3 valueAtIndex = objVecticies->at(index);
+			verticies->push_back(valueAtIndex[0]);
+			verticies->push_back(valueAtIndex[1]);
+			verticies->push_back(valueAtIndex[2]);
+			verticies->push_back(1.0f);
+			vertexCount += 1;
+		}
+
+		for (int i = 0; i < faceNormalIndex->size(); i++)
+		{
+			int index = faceNormalIndex->at(i);
+			vmath::vec3 valueAtIndex = objNormals->at(index);
+			normals->push_back(valueAtIndex[0]);
+			normals->push_back(valueAtIndex[1]);
+			normals->push_back(valueAtIndex[2]);
+			normals->push_back(1.0f);
+		}
+
+
+		delete(objVecticies);
+		delete(objNormals);
+		delete(faceVerticiesIndex);
+		delete(faceNormalIndex);
+
+		objVecticies = NULL;
+		objNormals = NULL;
+		faceVerticiesIndex = NULL;
+		faceNormalIndex = NULL;
 
 		glGenVertexArrays(1, &vao);  //glGenVertexArrays(n, &array) returns n vertex array object names in arrays
 		glBindVertexArray(vao); //glBindVertexArray(array) binds the vertex array object with name array.
