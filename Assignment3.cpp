@@ -256,28 +256,19 @@ void assignment3_app::render(double currentTime)
 	block->useUniformColor = falseVec;
 #pragma endregion
 
-#pragma region bind cube vertex data
+#pragma region Draw Face Cube
 	cube->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-#pragma endregion
 
-#pragma endregion
 	glUseProgram(per_fragment_program);
-#pragma region Draw Face Cube
 
-	glUnmapBuffer(GL_UNIFORM_BUFFER); //release the mapping of a buffer object's data store into the client's address space
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-
-	//vmath::mat4 model_matrix =
-	//	vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
-	//	vmath::translate(10.0f, -17.3f, -1.0f) *
-	//	vmath::scale(5.0f);
 	vmath::mat4 model_matrix =
-		vmath::scale(5.0f);
+		vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
+		vmath::translate(10.0f, -17.3f, -1.0f) *
+		vmath::scale(10.0f);
 	block->model_matrix = model_matrix;
 	block->mv_matrix = view_matrix * model_matrix;
 	block->view_matrix = view_matrix;
@@ -286,6 +277,50 @@ void assignment3_app::render(double currentTime)
 
 	glCullFace(GL_BACK);
 	cube->Draw();
+#pragma endregion
+
+#pragma region Draw Teapot
+	teapot->BindBuffers();
+
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+
+	//glUseProgram(per_fragment_program);
+
+	model_matrix = vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
+		vmath::translate(-10.0f, 17.3f, -1.0f) *
+		vmath::scale(5.0f);
+	block->model_matrix = model_matrix;
+	block->mv_matrix = view_matrix * model_matrix;
+	block->view_matrix = view_matrix;
+	block->useUniformColor = trueVec;
+	block->invertNormals = falseVec;
+
+	//glCullFace(GL_BACK);
+	teapot->Draw();
+#pragma endregion
+
+#pragma region Draw Sphere
+	sphere->BindBuffers();
+
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+
+	//glUseProgram(per_fragment_program);
+
+	model_matrix = vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
+		vmath::translate(0.0f, 0.0f, -1.0f) *
+		vmath::scale(5.0f);
+	block->model_matrix = model_matrix;
+	block->mv_matrix = view_matrix * model_matrix;
+	block->view_matrix = view_matrix;
+	block->useUniformColor = trueVec;
+	block->invertNormals = falseVec;
+
+	glCullFace(GL_FRONT_FACE);
+	sphere->Draw();
 #pragma endregion
 
 }

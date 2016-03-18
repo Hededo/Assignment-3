@@ -86,11 +86,10 @@ public:
 
 	void ObjObject::Draw()
 	{
-		glDrawArrays(GL_TRIANGLES, 0, vertexCount * elementsInVec);
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 
 private:
-	GLint elementsInVec = 4;
 	void ObjObject::CreateFromFile()
 	{
 		std::ifstream file = std::ifstream(fileName);

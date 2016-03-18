@@ -1,20 +1,20 @@
 ﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (gettingStarted.dir\Debug\) contains files shared from another project (Assignment1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   Assignment3.cpp
 D:\Local Docs\Code\CS 5610\Assignment-3\include\vmath.h(1022): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(136): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(137): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(138): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(139): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(140): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(141): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(142): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(151): warning C4018: '<': signed/unsigned mismatch
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(153): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(162): warning C4018: '<': signed/unsigned mismatch
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(164): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(112): warning C4101: 'vertexIndex': unreferenced local variable
-d:\local docs\code\cs 5610\assignment-3\objObject.cpp(112): warning C4101: 'normalIndex': unreferenced local variable
-Assignment3.cpp(343): warning C4305: '+=': truncation from 'double' to 'float'
-Assignment3.cpp(349): warning C4305: '-=': truncation from 'double' to 'float'
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(150): warning C4018: '<': signed/unsigned mismatch
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(152): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(161): warning C4018: '<': signed/unsigned mismatch
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(163): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(111): warning C4101: 'vertexIndex': unreferenced local variable
+d:\local docs\code\cs 5610\assignment-3\objObject.cpp(111): warning C4101: 'normalIndex': unreferenced local variable
+Assignment3.cpp(378): warning C4305: '+=': truncation from 'double' to 'float'
+Assignment3.cpp(384): warning C4305: '-=': truncation from 'double' to 'float'
 sb7_d.lib(sb7.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
 sb7_d.lib(sb7shader.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7shader.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
 sb7_d.lib(gl3w.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(gl3w.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
