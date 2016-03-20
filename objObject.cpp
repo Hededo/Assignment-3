@@ -10,27 +10,27 @@
 std::vector<int> IntsInString(std::string str)
 {
 	std::vector<int> toReturn;
-	std::string temp = "";
+	std::string intAsString = "";
 
 	for (char& c : str)
 	{
 		if (std::isdigit(c))
 		{
-			temp += c;
+			intAsString += c;
 		}
 		else
 		{
-			if (temp != "")
+			if (intAsString != "")
 			{
-				toReturn.push_back(std::stoi(temp));
+				toReturn.push_back(std::stoi(intAsString));
 			}
-			temp = "";
+			intAsString = "";
 		}
 	}
 
-	if (temp != "")
+	if (intAsString != "")
 	{
-		toReturn.push_back(std::stoi(temp));
+		toReturn.push_back(std::stoi(intAsString));
 	}
 
 	return toReturn;

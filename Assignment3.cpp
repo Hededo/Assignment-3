@@ -14,6 +14,7 @@
 #include <string>
 
 #include "objObject.cpp"
+#include "lodepng.h"
 
 #define PI 3.14159265
 
@@ -113,7 +114,7 @@ const vmath::vec4 falseVec = vmath::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 const vmath::vec4 trueVec = vmath::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 #pragma endregion
 
-#pragma region Vertex Data
+#pragma region Geometery
 ObjObject * cube;
 ObjObject * sphere;
 ObjObject * teapot;
@@ -158,6 +159,13 @@ void assignment3_app::startup()
 	glGenBuffers(1, &uniforms_buffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, uniforms_buffer);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniforms_block), NULL, GL_DYNAMIC_DRAW);
+#pragma endregion
+
+#pragma region Load Textures
+	std::vector<unsigned char> floorImage;
+	std::string floorFilePath = "bin\\media\\textures\\floor.png";
+	unsigned width, height;
+	unsigned error = lodepng::decode(floorImage, width, height, floorFilePath);
 #pragma endregion
 
 #pragma region OPENGL Settings
@@ -289,38 +297,39 @@ void assignment3_app::render(double currentTime)
 	//glUseProgram(per_fragment_program);
 
 	model_matrix = vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
-		vmath::translate(-10.0f, 17.3f, -1.0f) *
+		vmath::translate(-10.0f, 20.0f, -1.0f) *
 		vmath::scale(5.0f);
 	block->model_matrix = model_matrix;
 	block->mv_matrix = view_matrix * model_matrix;
 	block->view_matrix = view_matrix;
+	block->uni_color = purple;
 	block->useUniformColor = trueVec;
 	block->invertNormals = falseVec;
 
-	//glCullFace(GL_BACK);
+	glDisable(GL_CULL_FACE);
 	teapot->Draw();
 #pragma endregion
 
-#pragma region Draw Sphere
-	sphere->BindBuffers();
+#pragma region Draw Floor
+	cube->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
-	//glUseProgram(per_fragment_program);
+	glUseProgram(per_fragment_program);
 
-	model_matrix = vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f) *
-		vmath::translate(0.0f, 0.0f, -1.0f) *
-		vmath::scale(5.0f);
+	model_matrix =
+		vmath::translate(0.0f, -25.0f, 0.0f) *
+		vmath::scale(100.0f, 0.0f, 100.0f);
 	block->model_matrix = model_matrix;
 	block->mv_matrix = view_matrix * model_matrix;
 	block->view_matrix = view_matrix;
+	block->uni_color = gray;
 	block->useUniformColor = trueVec;
-	block->invertNormals = falseVec;
+	block->invertNormals = trueVec;
 
-	glCullFace(GL_FRONT_FACE);
-	sphere->Draw();
+	cube->Draw();
 #pragma endregion
 
 }
