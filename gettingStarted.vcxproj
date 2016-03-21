@@ -280,10 +280,12 @@
     <None Include="pattern1.ktx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lodepng.h" />
     <ClInclude Include="objObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Assignment3.cpp" />
+    <ClCompile Include="lodepng.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

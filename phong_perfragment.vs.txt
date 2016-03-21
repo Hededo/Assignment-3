@@ -46,6 +46,7 @@ void main(void)
 
     // Calculate light vector
     vs_out.L = worldLight.xyz - P.xyz;
+	//vs_out.L = light_pos.xyz - P.xyz;
 
     // Calculate view vector
     vs_out.V = -P.xyz;

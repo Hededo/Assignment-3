@@ -165,7 +165,7 @@ void assignment3_app::startup()
 	std::vector<unsigned char> floorImage;
 	std::string floorFilePath = "bin\\media\\textures\\floor.png";
 	unsigned width, height;
-	//unsigned error = lodepng::decode(floorImage, width, height, floorFilePath);
+	unsigned error = lodepng::decode(floorImage, width, height, floorFilePath);
 #pragma endregion
 
 #pragma region OPENGL Settings
@@ -285,7 +285,7 @@ void assignment3_app::render(double currentTime)
 	block->view_matrix = view_matrix;
 	block->uni_color = gray;
 	block->useUniformColor = trueVec;
-	block->invertNormals = falseVec;
+	block->invertNormals = trueVec;
 
 	glCullFace(GL_BACK);
 	cube->Draw();
