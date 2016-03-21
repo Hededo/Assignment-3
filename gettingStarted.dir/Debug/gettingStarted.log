@@ -13,7 +13,23 @@ d:\local docs\code\cs 5610\assignment-3\objObject.cpp(161): warning C4018: '<': 
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(163): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(111): warning C4101: 'vertexIndex': unreferenced local variable
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(111): warning C4101: 'normalIndex': unreferenced local variable
-Assignment3.cpp(387): warning C4305: '+=': truncation from 'double' to 'float'
-Assignment3.cpp(393): warning C4305: '-=': truncation from 'double' to 'float'
-Assignment3.obj : error LNK2019: unresolved external symbol "unsigned int __cdecl lodepng::decode(class std::vector<unsigned char,class std::allocator<unsigned char> > &,unsigned int &,unsigned int &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,enum LodePNGColorType,unsigned int)" (?decode@lodepng@@YAIAAV?$vector@EV?$allocator@E@std@@@std@@AAI1ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@3@W4LodePNGColorType@@I@Z) referenced in function "protected: virtual void __thiscall assignment3_app::startup(void)" (?startup@assignment3_app@@MAEXXZ)
-bin\gettingStarted_d.exe : fatal error LNK1120: 1 unresolved externals
+Assignment3.cpp(167): warning C4101: 'height': unreferenced local variable
+Assignment3.cpp(167): warning C4101: 'width': unreferenced local variable
+sb7_d.lib(sb7.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
+sb7_d.lib(sb7shader.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7shader.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
+sb7_d.lib(gl3w.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(gl3w.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
+glfw3_d.lib(context.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(context.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(gamma.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(gamma.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(init.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(init.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(input.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(input.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(monitor.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(monitor.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(time.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(time.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(window.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(window.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(win32_gamma.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(win32_gamma.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(win32_init.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(win32_init.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(win32_joystick.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(win32_joystick.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(win32_monitor.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(win32_monitor.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(win32_time.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(win32_time.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(win32_window.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(win32_window.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+glfw3_d.lib(wgl_context.obj) : warning LNK4099: PDB 'glfw.pdb' was not found with 'glfw3_d.lib(wgl_context.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\glfw.pdb'; linking object as if no debug info
+  gettingStarted.vcxproj -> D:\Local Docs\Code\CS 5610\Assignment-3\bin\gettingStarted_d.exe

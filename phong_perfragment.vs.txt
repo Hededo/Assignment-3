@@ -42,8 +42,10 @@ void main(void)
     // Calculate normal in view-space
     vs_out.N = mat3(mv_matrix) * adjustedNormal.xyz;
 
+	vec4 worldLight = mv_matrix * light_pos;
+
     // Calculate light vector
-    vs_out.L = light_pos.xyz - P.xyz;
+    vs_out.L = worldLight.xyz - P.xyz;
 
     // Calculate view vector
     vs_out.V = -P.xyz;
