@@ -275,11 +275,6 @@
     <Text Include="phong_perfragment.vs.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="face.ktx" />
-    <None Include="mountaincube.ktx" />
-    <None Include="pattern1.ktx" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="objObject.cpp" />
   </ItemGroup>

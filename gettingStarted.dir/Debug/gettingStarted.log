@@ -13,8 +13,6 @@ d:\local docs\code\cs 5610\assignment-3\objObject.cpp(161): warning C4018: '<': 
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(163): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(111): warning C4101: 'vertexIndex': unreferenced local variable
 d:\local docs\code\cs 5610\assignment-3\objObject.cpp(111): warning C4101: 'normalIndex': unreferenced local variable
-  lodepng.cpp
-  Generating Code...
 sb7_d.lib(sb7.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
 sb7_d.lib(sb7shader.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(sb7shader.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info
 sb7_d.lib(gl3w.obj) : warning LNK4099: PDB 'sb7.pdb' was not found with 'sb7_d.lib(gl3w.obj)' or at 'D:\Local Docs\Code\CS 5610\Assignment-3\bin\sb7.pdb'; linking object as if no debug info

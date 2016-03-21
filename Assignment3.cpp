@@ -26,7 +26,8 @@ class assignment3_app : public sb7::application
 public:
 	assignment3_app()
 		: per_fragment_program(0),
-		flatColorProgram(0)
+		flatColorProgram(0),
+		floorProgram(0)
 	{
 	}
 #pragma endregion
@@ -60,12 +61,10 @@ protected:
 	void load_shaders();
 
 	GLuint          per_fragment_program;
-	GLuint          checkerFloorProgram;
 	GLuint          flatColorProgram;
+	GLuint          floorProgram;
 
-	GLuint          tex_object[2];
-	GLuint          tex_index;
-	GLuint          tex_envmap;
+	GLuint          tex_floor;
 
 	//Where uniforms are defined
 	struct uniforms_block
@@ -164,12 +163,48 @@ void assignment3_app::startup()
 #pragma region Load Textures
 	std::vector<unsigned char> floorImage;
 	std::string floorFilePath = "bin\\media\\textures\\floor.png";
-	unsigned width, height;
-	unsigned error = lodepng::decode(floorImage, width, height, floorFilePath);
+
+	unsigned floor_width, floor_height;
+	unsigned error = lodepng::decode(floorImage, floor_width, floor_height, floorFilePath);
+
+	if (error != 0)
+	{
+		std::cout << "error " << error << ": " << lodepng_error_text(error) << std::endl;
+		return;
+	}
+
+	// Texture size must be power of two for the primitive OpenGL version this is written for. Find next power of two.
+	size_t u2 = 1; while (u2 < floor_width) u2 *= 2;
+	size_t v2 = 1; while (v2 < floor_height) v2 *= 2;
+	// Ratio for power of two version compared to actual version, to render the non power of two image with proper size.
+	double u3 = (double)floor_width / u2;
+	double v3 = (double)floor_height / v2;
+
+	// Make power of two version of the image.
+	std::vector<unsigned char> floorTexture(u2 * v2 * 4);
+	for (size_t y = 0; y < floor_height; y++)
+		for (size_t x = 0; x < floor_width; x++)
+			for (size_t c = 0; c < 4; c++)
+			{
+				floorTexture[4 * u2 * y + 4 * x + c] = floorImage[4 * floor_width * y + 4 * x + c];
+			}
+
+	// Enable the texture for OpenGL.
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); //GL_NEAREST = no smoothing
+
+	// Generate a name for the texture
+	glGenTextures(1, &tex_floor);
+	// Now bind it to the context using the GL_TEXTURE_2D binding point
+	glBindTexture(GL_TEXTURE_2D, tex_floor);
+	// Specify the amount of storage we want to use for the texture
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, floor_width, floor_height);
+	// Assume the texture is already bound to the GL_TEXTURE_2D target
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, floor_width, floor_height, GL_RGBA, GL_UNSIGNED_BYTE, &floorTexture[0]);
 #pragma endregion
 
 #pragma region OPENGL Settings
 
+	glEnable(GL_TEXTURE_2D);
     glFrontFace(GL_CW); //glFrontFace(GLenum mode) In a scene composed entirely of opaque closed surfaces, back-facing polygons are never visible.
 	glEnable(GL_DEPTH_TEST); //glEnable(GLenum cap) glEnable and glDisable enable and disable various capabilities.
 	glDepthFunc(GL_LEQUAL);	//glDepthFunc(GLenum func) specifies the function used to compare each incoming pixel depth value with the depth value present in the depth buffer. 
@@ -362,7 +397,8 @@ void assignment3_app::render(double currentTime)
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
-	glUseProgram(per_fragment_program);
+	glUseProgram(floorProgram);
+	glBindTexture(GL_TEXTURE_2D, tex_floor);
 
 	model_matrix =
 		vmath::translate(0.0f, -24.9f, 0.0f) *
@@ -410,7 +446,18 @@ void assignment3_app::load_shaders()
 	glAttachShader(flatColorProgram, fs);
 	glLinkProgram(flatColorProgram);
 
+	vs = sb7::shader::load("floor.vs.txt", GL_VERTEX_SHADER);
+	fs = sb7::shader::load("floor.fs.txt", GL_FRAGMENT_SHADER);
 
+	if (floorProgram)
+	{
+		glDeleteProgram(floorProgram);
+	}
+
+	floorProgram = glCreateProgram();
+	glAttachShader(floorProgram, vs);
+	glAttachShader(floorProgram, fs);
+	glLinkProgram(floorProgram);
 }
 
 #pragma region Event Handlers
@@ -434,11 +481,6 @@ void assignment3_app::onKey(int key, int action)
 			fYpos = 0.0f;
 			fZpos = 75.0f;
 			lightPosOffset = vmath::vec3(0, 0, 0);
-			break;
-		case 'T':
-			tex_index++;
-			if (tex_index > 1)
-				tex_index = 0;
 			break;
 		case '1':
 			lightPosOffset[0] += 1;
