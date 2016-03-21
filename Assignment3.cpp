@@ -139,7 +139,8 @@ private:
 	float fZpos = 75.0f;
 
 	// Initial light pos
-	vmath::vec4 initalLightPos = vmath::vec4(0.0f, 20.0f, -2.0f, 1.0f);
+	//vmath::vec4 initalLightPos = vmath::vec4(0.0f, 20.0f, -2.0f, 1.0f);
+	vmath::vec4 initalLightPos = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Offset move location cube with sphere
 	vmath::vec3 lightPosOffset = vmath::vec3(0, 0, 0);
@@ -402,7 +403,7 @@ void assignment3_app::render(double currentTime)
 
 	model_matrix =
 		vmath::translate(0.0f, -24.9f, 0.0f) *
-		vmath::scale(50.0f, 0.0f, 50.0f);
+		vmath::scale(50.0f, 1.0f, 50.0f);
 	block->model_matrix = model_matrix;
 	block->mv_matrix = view_matrix * model_matrix;
 	block->view_matrix = view_matrix;
