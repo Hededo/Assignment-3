@@ -11,7 +11,8 @@ layout (std140) uniform constants
     mat4 mv_matrix;	
 	mat4 model_matrix;													
 	mat4 view_matrix;												
-	mat4 proj_matrix;												
+	mat4 proj_matrix;
+	mat4 shadow_matrix;												
 	vec4 uni_color;		
 	vec4 light_pos;									     		
 	vec4 useUniformColor;	

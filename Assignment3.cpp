@@ -18,6 +18,39 @@
 
 #define PI 3.14159265
 
+static vmath::mat4 ShadowMatrix(vmath::vec4 groundPlane, vmath::vec4 lightPos)
+{
+	GLfloat dot;
+	vmath::mat4 shadowMat;
+
+	dot = groundPlane[0] * lightPos[0] +
+		  groundPlane[1] * lightPos[1] +
+		  groundPlane[2] * lightPos[2] +
+		  groundPlane[3] * lightPos[3];
+
+	shadowMat[0][0] = dot - lightPos[0] + groundPlane[0];
+	shadowMat[1][0] = 0.0 - lightPos[0] + groundPlane[1];
+	shadowMat[2][0] = 0.0 - lightPos[0] + groundPlane[2];
+	shadowMat[3][0] = 0.0 - lightPos[0] + groundPlane[3];
+
+	shadowMat[0][1] = 0.0 - lightPos[1] * groundPlane[0];
+	shadowMat[1][1] = dot - lightPos[1] * groundPlane[1];
+	shadowMat[2][1] = 0.0 - lightPos[1] * groundPlane[2];
+	shadowMat[3][1] = 0.0 - lightPos[1] * groundPlane[3];
+
+	shadowMat[0][2] = 0.0 - lightPos[2] * groundPlane[0];
+	shadowMat[1][2] = 0.0 - lightPos[2] * groundPlane[1];
+	shadowMat[2][2] = dot - lightPos[2] * groundPlane[2];
+	shadowMat[3][2] = 0.0 - lightPos[2] * groundPlane[3];
+
+	shadowMat[0][3] = 0.0 - lightPos[3] * groundPlane[0];
+	shadowMat[1][3] = 0.0 - lightPos[3] * groundPlane[1];
+	shadowMat[2][3] = 0.0 - lightPos[3] * groundPlane[2];
+	shadowMat[3][3] = dot - lightPos[3] * groundPlane[3];
+
+	return shadowMat;
+}
+
 class assignment3_app : public sb7::application
 {
 
@@ -27,7 +60,8 @@ public:
 	assignment3_app()
 		: per_fragment_program(0),
 		flatColorProgram(0),
-		floorProgram(0)
+		floorProgram(0),
+		projectedShadowProgram(0)
 	{
 	}
 #pragma endregion
@@ -63,6 +97,7 @@ protected:
 	GLuint          per_fragment_program;
 	GLuint          flatColorProgram;
 	GLuint          floorProgram;
+	GLuint          projectedShadowProgram;
 
 	GLuint          tex_floor;
 
@@ -73,6 +108,7 @@ protected:
 		vmath::mat4     model_matrix;
 		vmath::mat4     view_matrix;
 		vmath::mat4     proj_matrix;
+		vmath::mat4     shadow_matrix;
 		vmath::vec4     uni_color;
 		vmath::vec4     lightPos;
 		vmath::vec4	    useUniformColor;
@@ -144,6 +180,19 @@ private:
 
 	// Offset move location cube with sphere
 	vmath::vec3 lightPosOffset = vmath::vec3(0, 0, 0);
+
+	bool projectedShadows = false;
+
+	struct planesStruct
+	{
+		vmath::vec4     xyPlane;
+		vmath::vec4     yzPlane;
+		vmath::vec4     xzPlane;
+	};
+
+	planesStruct * planes;
+
+
 #pragma endregion
 };
 
@@ -154,6 +203,11 @@ void assignment3_app::startup()
 	cube = new ObjObject("bin\\media\\objects\\cube.obj");
 	sphere = new ObjObject("bin\\media\\objects\\sphere.obj");
 	teapot = new ObjObject("bin\\media\\objects\\wt_teapot.obj");
+
+	planes = new planesStruct();
+	planes->xyPlane = vmath::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	planes->yzPlane = vmath::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	planes->xzPlane = vmath::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 
 #pragma region Buffer For Uniform Block
 	glGenBuffers(1, &uniforms_buffer);
@@ -283,6 +337,9 @@ void assignment3_app::render(double currentTime)
 	block->proj_matrix = perspective_matrix;
 	block->lightPos = vmath::vec4(initalLightPos[0] + lightPosOffset[0], initalLightPos[1] + lightPosOffset[1], initalLightPos[2] + lightPosOffset[2], 1.0f);
 	block->colorPercent = vmath::vec4(colorPercent, colorPercent, colorPercent, colorPercent);
+
+	vmath::vec4 groundPlane = vmath::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	block->shadow_matrix = ShadowMatrix(groundPlane, block->lightPos);
 #pragma endregion
 
 #pragma region Draw Light Source
@@ -414,6 +471,24 @@ void assignment3_app::render(double currentTime)
 	cube->Draw();
 #pragma endregion
 
+#pragma region Draw Teapot Shadow
+	teapot->BindBuffers();
+
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+
+	glUseProgram(projectedShadowProgram);
+	glBindTexture(GL_TEXTURE_2D, tex_floor);
+
+	model_matrix =
+		vmath::translate(0.0f, -24.9f, 0.0f) *
+		vmath::scale(50.0f, 1.0f, 50.0f);
+	block->model_matrix = model_matrix;
+	block->shadow_matrix = ShadowMatrix(planes->xzPlane, block->lightPos);
+
+	teapot->Draw();
+#pragma endregion
 }
 
 void assignment3_app::load_shaders()
@@ -459,6 +534,19 @@ void assignment3_app::load_shaders()
 	glAttachShader(floorProgram, vs);
 	glAttachShader(floorProgram, fs);
 	glLinkProgram(floorProgram);
+
+	vs = sb7::shader::load("projectedShadow.vs.txt", GL_VERTEX_SHADER);
+	fs = sb7::shader::load("projectedShadow.fs.txt", GL_FRAGMENT_SHADER);
+
+	if (projectedShadowProgram)
+	{
+		glDeleteProgram(projectedShadowProgram);
+	}
+
+	projectedShadowProgram = glCreateProgram();
+	glAttachShader(projectedShadowProgram, vs);
+	glAttachShader(projectedShadowProgram, fs);
+	glLinkProgram(projectedShadowProgram);
 }
 
 #pragma region Event Handlers
@@ -500,6 +588,9 @@ void assignment3_app::onKey(int key, int action)
 			break;
 		case 'S':
 			lightPosOffset[2] -= 1;
+			break;
+		case 'P':
+			projectedShadows = !projectedShadows;
 			break;
 		}
 	}

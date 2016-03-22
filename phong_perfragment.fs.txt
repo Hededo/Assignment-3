@@ -34,4 +34,5 @@ void main(void)
 
     // Write final color to the framebuffer
     color = vec4((ambient + diffuse + specular)*fs_in.color, 1.0);	
+	//color = vec4((ambient)*fs_in.color, 1.0);
 }

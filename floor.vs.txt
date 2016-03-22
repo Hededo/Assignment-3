@@ -11,7 +11,8 @@ layout (std140) uniform constants
     mat4 mv_matrix;		
 	mat4 model_matrix;												
 	mat4 view_matrix;												
-	mat4 proj_matrix;												
+	mat4 proj_matrix;
+	mat4 shadow_matrix;												
 	vec4 uni_color;		
 	vec4 light_pos;									     		
 	vec4 useUniformColor;	
@@ -43,8 +44,11 @@ void main(void)
     // Calculate normal in view-space
     vs_out.N = mat3(mv_matrix) * adjustedNormal.xyz;
 
+    vec4 worldLight = mv_matrix * light_pos;
+
     // Calculate light vector
-    vs_out.L = light_pos.xyz - P.xyz;
+    //vs_out.L = worldLight.xyz - P.xyz;
+	vs_out.L = light_pos.xyz - P.xyz;
 
     // Calculate view vector
     vs_out.V = -P.xyz;
