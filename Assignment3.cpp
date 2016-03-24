@@ -107,6 +107,7 @@ protected:
 		vmath::mat4     mv_matrix;
 		vmath::mat4     model_matrix;
 		vmath::mat4     view_matrix;
+		vmath::mat4     light_view_matrix;
 		vmath::mat4     proj_matrix;
 		vmath::mat4     shadow_matrix;
 		vmath::vec4     uni_color;
@@ -185,9 +186,12 @@ private:
 
 	struct planesStruct
 	{
-		vmath::vec4     xyPlane;
-		vmath::vec4     yzPlane;
-		vmath::vec4     xzPlane;
+		vmath::vec4     PosX;
+		vmath::vec4     NegX;
+		vmath::vec4     PosY;
+		vmath::vec4     NegY;
+		vmath::vec4     PosZ;
+		vmath::vec4     NegZ;
 	};
 
 	planesStruct * planes;
@@ -205,9 +209,13 @@ void assignment3_app::startup()
 	teapot = new ObjObject("bin\\media\\objects\\wt_teapot.obj");
 
 	planes = new planesStruct();
-	planes->xyPlane = vmath::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	planes->yzPlane = vmath::vec4(0.0f, 1.0f, 1.0f, 1.0f);
-	planes->xzPlane = vmath::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+	planes->PosX = vmath::vec4( 1.0f, 0.0f, 0.0f, 1.0f);
+	planes->NegX = vmath::vec4(-1.0f, 0.0f, 0.0f, 1.0f);
+	planes->PosY = vmath::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	planes->NegY = vmath::vec4(0.0f, -1.0f, 0.0f, 1.0f);
+	planes->PosZ = vmath::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+	planes->NegZ = vmath::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+
 
 #pragma region Buffer For Uniform Block
 	glGenBuffers(1, &uniforms_buffer);
@@ -248,9 +256,9 @@ void assignment3_app::startup()
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); //GL_NEAREST = no smoothing
 
 	// Generate a name for the texture
-	glGenTextures(1, &tex_floor);
+	glGenTextures(1, &tex_floor); //GLuint tex_floor
 	// Now bind it to the context using the GL_TEXTURE_2D binding point
-	glBindTexture(GL_TEXTURE_2D, tex_floor);
+	glBindTexture(GL_TEXTURE_2D, tex_floor); 
 	// Specify the amount of storage we want to use for the texture
 	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, floor_width, floor_height);
 	// Assume the texture is already bound to the GL_TEXTURE_2D target
@@ -335,7 +343,15 @@ void assignment3_app::render(double currentTime)
 
 #pragma region Uniforms that remain constant for all geometery
 	block->proj_matrix = perspective_matrix;
-	block->lightPos = vmath::vec4(initalLightPos[0] + lightPosOffset[0], initalLightPos[1] + lightPosOffset[1], initalLightPos[2] + lightPosOffset[2], 1.0f);
+	vmath::vec4 lightPos = vmath::vec4(initalLightPos[0] + lightPosOffset[0], initalLightPos[1] + lightPosOffset[1], initalLightPos[2] + lightPosOffset[2], 1.0f);
+	vmath::mat4 light_view_matrix = vmath::lookat(vmath::vec3(lightPos[0], lightPos[1], lightPos[2]),
+		vmath::vec3(0.0f, 0.0f, 0.0f),
+		vmath::vec3(0.0f, 1.0f, 0.0f));
+	//light_view_matrix *= translationMatrix;
+	//light_view_matrix *= rotationMatrix;
+	block->light_view_matrix = light_view_matrix;
+	block->lightPos = lightPos;
+
 	block->colorPercent = vmath::vec4(colorPercent, colorPercent, colorPercent, colorPercent);
 
 	vmath::vec4 groundPlane = vmath::vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -471,24 +487,49 @@ void assignment3_app::render(double currentTime)
 	cube->Draw();
 #pragma endregion
 
-#pragma region Draw Teapot Shadow
+#pragma region Draw Teapot
 	teapot->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
-	glUseProgram(projectedShadowProgram);
-	glBindTexture(GL_TEXTURE_2D, tex_floor);
+	glUseProgram(per_fragment_program);
 
 	model_matrix =
-		vmath::translate(0.0f, -24.9f, 0.0f) *
-		vmath::scale(50.0f, 1.0f, 50.0f);
+		vmath::translate(0.0f, 0.0f, 0.0f) *
+		vmath::scale(5.0f);
 	block->model_matrix = model_matrix;
-	block->shadow_matrix = ShadowMatrix(planes->xzPlane, block->lightPos);
+	block->mv_matrix = view_matrix * model_matrix;
+	block->view_matrix = view_matrix;
+	block->uni_color = purple;
+	block->useUniformColor = trueVec;
+	block->invertNormals = falseVec;
 
 	teapot->Draw();
 #pragma endregion
+
+//#pragma region Draw Teapot Shadow
+//	teapot->BindBuffers();
+//
+//	glUnmapBuffer(GL_UNIFORM_BUFFER);
+//	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+//	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+//
+//	glUseProgram(projectedShadowProgram);
+//	glBindTexture(GL_TEXTURE_2D, tex_floor);
+//
+//	model_matrix =
+//		vmath::translate(-15.0f, -14.7f, -5.0f) *
+//		vmath::rotate(225.0f, 0.0f, 1.0f, 0.0f) *
+//		vmath::scale(5.0f);
+//	block->model_matrix = model_matrix;
+//	block->mv_matrix = view_matrix * model_matrix;
+//	block->shadow_matrix = ShadowMatrix(planes->NegX, lightPos);
+//	block->invertNormals = falseVec;
+//
+//	teapot->Draw();
+//#pragma endregion
 }
 
 void assignment3_app::load_shaders()

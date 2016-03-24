@@ -10,7 +10,8 @@ layout (std140) uniform constants
 {
     mat4 mv_matrix;	
 	mat4 model_matrix;													
-	mat4 view_matrix;												
+	mat4 view_matrix;	
+	mat4 light_view_matrix;											
 	mat4 proj_matrix;
 	mat4 shadow_matrix;												
 	vec4 uni_color;		
@@ -29,6 +30,7 @@ out VS_OUT
 void main(void)
 {         			
     vs_out.color = uni_color.xyz;		 
+	//vs_out.color = (proj_matrix * mv_matrix * position).xyz;
 
     // Calculate the clip-space position of each vertex
     gl_Position = proj_matrix * mv_matrix * position;
