@@ -17,6 +17,18 @@
 #include "lodepng.h"
 
 #define PI 3.14159265
+#define DEPTH_TEXTURE_SIZE      4096
+#define FRUSTUM_DEPTH           1000
+
+static vmath::vec4 mult(vmath::mat4 m, vmath::vec4 v)
+{
+	return vmath::vec4(
+		v[0] * (m[0][0] + m[1][0] + m[2][0] + m[3][0]),
+		v[1] * (m[0][1] + m[1][1] + m[2][1] + m[3][1]),
+		v[2] * (m[0][2] + m[1][2] + m[2][2] + m[3][2]),
+		v[3] * (m[0][3] + m[1][3] + m[2][3] + m[3][3])
+		);
+}
 
 static vmath::mat4 ShadowMatrix(vmath::vec4 groundPlane, vmath::vec4 lightPos)
 {
@@ -61,7 +73,8 @@ public:
 		: per_fragment_program(0),
 		flatColorProgram(0),
 		floorProgram(0),
-		projectedShadowProgram(0)
+		projectedShadowProgram(0),
+		shadowMapProgram(0)
 	{
 	}
 #pragma endregion
@@ -98,8 +111,14 @@ protected:
 	GLuint          flatColorProgram;
 	GLuint          floorProgram;
 	GLuint          projectedShadowProgram;
+	GLuint          shadowMapProgram;
 
 	GLuint          tex_floor;
+
+	GLuint          depthBuffer;
+	GLuint          depthTexture;
+
+	GLuint          quad_vao;
 
 	//Where uniforms are defined
 	struct uniforms_block
@@ -110,6 +129,7 @@ protected:
 		vmath::mat4     light_view_matrix;
 		vmath::mat4     proj_matrix;
 		vmath::mat4     shadow_matrix;
+		vmath::mat4		depthMVP;
 		vmath::vec4     uni_color;
 		vmath::vec4     lightPos;
 		vmath::vec4	    useUniformColor;
@@ -176,8 +196,8 @@ private:
 	float fZpos = 75.0f;
 
 	// Initial light pos
-	//vmath::vec4 initalLightPos = vmath::vec4(0.0f, 20.0f, -2.0f, 1.0f);
-	vmath::vec4 initalLightPos = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	vmath::vec4 initalLightPos = vmath::vec4(0.0f, 20.0f, -2.0f, 1.0f);
+	//vmath::vec4 initalLightPos = vmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Offset move location cube with sphere
 	vmath::vec3 lightPosOffset = vmath::vec3(0, 0, 0);
@@ -192,6 +212,8 @@ private:
 		vmath::vec4     NegY;
 		vmath::vec4     PosZ;
 		vmath::vec4     NegZ;
+		vmath::vec4		Floor;
+		vmath::vec4		Wall;
 	};
 
 	planesStruct * planes;
@@ -215,6 +237,8 @@ void assignment3_app::startup()
 	planes->NegY = vmath::vec4(0.0f, -1.0f, 0.0f, 1.0f);
 	planes->PosZ = vmath::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 	planes->NegZ = vmath::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+	planes->Floor = vmath::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+	planes->Wall = vmath::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 
 
 #pragma region Buffer For Uniform Block
@@ -265,6 +289,25 @@ void assignment3_app::startup()
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, floor_width, floor_height, GL_RGBA, GL_UNSIGNED_BYTE, &floorTexture[0]);
 #pragma endregion
 
+#pragma region Shadow Map stuff
+	glGenFramebuffers(1, &depthBuffer);
+	//glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
+
+	glGenTextures(1, &depthTexture);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 11, GL_DEPTH_COMPONENT32F, DEPTH_TEXTURE_SIZE, DEPTH_TEXTURE_SIZE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+	glGenVertexArrays(1, &quad_vao);
+	glBindVertexArray(quad_vao);
+
+#pragma endregion
+
 #pragma region OPENGL Settings
 
 	glEnable(GL_TEXTURE_2D);
@@ -279,7 +322,6 @@ void assignment3_app::render(double currentTime)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	const float f = (float)currentTime * 0.1f;
-
 
 #pragma region Calculations for mouse interaction camera rotation and translation matrix
 	float fAngle = 0.0f;
@@ -327,6 +369,8 @@ void assignment3_app::render(double currentTime)
 	glClearBufferfv(GL_COLOR, 0, skyBlue);
 	glClearBufferfv(GL_DEPTH, 0, ones);
 
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+
 	// Set up view and perspective matrix
 	vmath::vec3 view_position = vmath::vec3(0.0f, 0.0f, fZpos);
 	vmath::mat4 view_matrix = vmath::lookat(view_position,
@@ -347,15 +391,20 @@ void assignment3_app::render(double currentTime)
 	vmath::mat4 light_view_matrix = vmath::lookat(vmath::vec3(lightPos[0], lightPos[1], lightPos[2]),
 		vmath::vec3(0.0f, 0.0f, 0.0f),
 		vmath::vec3(0.0f, 1.0f, 0.0f));
-	//light_view_matrix *= translationMatrix;
-	//light_view_matrix *= rotationMatrix;
 	block->light_view_matrix = light_view_matrix;
 	block->lightPos = lightPos;
 
 	block->colorPercent = vmath::vec4(colorPercent, colorPercent, colorPercent, colorPercent);
+	
+	// Compute the MVP matrix from the light's point of view
 
-	vmath::vec4 groundPlane = vmath::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-	block->shadow_matrix = ShadowMatrix(groundPlane, block->lightPos);
+	vmath::mat4 light_proj_matrix = vmath::frustum(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 200.0f);
+	vmath::mat4 depthModelMatrix = vmath::mat4(1.0);
+	vmath::mat4 depthMVP = light_proj_matrix * light_view_matrix * depthModelMatrix;
+
+	// Send our transformation to the currently bound shader,
+	// in the "MVP" uniform
+	block->depthMVP = depthMVP;
 #pragma endregion
 
 #pragma region Draw Light Source
@@ -400,12 +449,17 @@ void assignment3_app::render(double currentTime)
 	cube->Draw();
 #pragma endregion
 
-#pragma region Draw Stand
+	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#pragma region Draw Teapot Stand Shadow
 	cube->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+
+	glUseProgram(projectedShadowProgram);
 
 	model_matrix =
 		vmath::translate(-15.0f, -19.7f, -5.0f) *
@@ -417,20 +471,43 @@ void assignment3_app::render(double currentTime)
 	block->uni_color = orange;
 	block->useUniformColor = trueVec;
 	block->invertNormals = falseVec;
+	block->shadow_matrix = ShadowMatrix(planes->Floor, mult(light_view_matrix, lightPos));
+
+	if (projectedShadows) {
+		cube->Draw();
+	}
+
+#pragma endregion
+	glDisable(GL_BLEND);
+	glDisable(GL_STENCIL_TEST);
+
+#pragma region Draw Stand
+	cube->BindBuffers();
+
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+
+	glUseProgram(per_fragment_program);
 
 	glDisable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	cube->Draw();
 #pragma endregion
 
-#pragma region Draw Teapot
+	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#pragma region Draw Teapot Shadow
 	teapot->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
-	model_matrix = 
+	glUseProgram(projectedShadowProgram);
+
+	model_matrix =
 		vmath::translate(-15.0f, -14.7f, -5.0f) *
 		vmath::rotate(225.0f, 0.0f, 1.0f, 0.0f) *
 		vmath::scale(5.0f);
@@ -440,16 +517,37 @@ void assignment3_app::render(double currentTime)
 	block->uni_color = purple;
 	block->useUniformColor = trueVec;
 	block->invertNormals = falseVec;
+	block->shadow_matrix = ShadowMatrix(planes->Floor, mult(light_view_matrix, lightPos));
+
+	if (projectedShadows) {
+		teapot->Draw();
+	}
+	
+#pragma endregion
+	glDisable(GL_BLEND);
+	glDisable(GL_STENCIL_TEST);
+
+#pragma region Draw Teapot
+	glUseProgram(per_fragment_program);
+	teapot->BindBuffers();
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
 	teapot->Draw();
 #pragma endregion
 
-#pragma region Draw tatoo free cube
+	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#pragma region Draw Teapot Shadow
 	cube->BindBuffers();
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
 	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
+
+	glUseProgram(projectedShadowProgram);
 
 	model_matrix =
 		vmath::translate(10.0f, -19.7f, 0.0f) *
@@ -460,6 +558,22 @@ void assignment3_app::render(double currentTime)
 	block->uni_color = white;
 	block->useUniformColor = trueVec;
 	block->invertNormals = falseVec;
+	block->shadow_matrix = ShadowMatrix(planes->Floor, mult(light_view_matrix, lightPos));
+
+	if (projectedShadows) {
+		cube->Draw();
+	}
+
+#pragma endregion
+	glDisable(GL_BLEND);
+	glDisable(GL_STENCIL_TEST);
+
+#pragma region Draw tatoo free cube
+	cube->BindBuffers();
+	glUseProgram(per_fragment_program);
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
+	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
 
 	cube->Draw();
 #pragma endregion
@@ -486,50 +600,6 @@ void assignment3_app::render(double currentTime)
 
 	cube->Draw();
 #pragma endregion
-
-#pragma region Draw Teapot
-	teapot->BindBuffers();
-
-	glUnmapBuffer(GL_UNIFORM_BUFFER);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-
-	glUseProgram(per_fragment_program);
-
-	model_matrix =
-		vmath::translate(0.0f, 0.0f, 0.0f) *
-		vmath::scale(5.0f);
-	block->model_matrix = model_matrix;
-	block->mv_matrix = view_matrix * model_matrix;
-	block->view_matrix = view_matrix;
-	block->uni_color = purple;
-	block->useUniformColor = trueVec;
-	block->invertNormals = falseVec;
-
-	teapot->Draw();
-#pragma endregion
-
-//#pragma region Draw Teapot Shadow
-//	teapot->BindBuffers();
-//
-//	glUnmapBuffer(GL_UNIFORM_BUFFER);
-//	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniforms_buffer);
-//	block = (uniforms_block *)glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(uniforms_block), GL_MAP_WRITE_BIT);
-//
-//	glUseProgram(projectedShadowProgram);
-//	glBindTexture(GL_TEXTURE_2D, tex_floor);
-//
-//	model_matrix =
-//		vmath::translate(-15.0f, -14.7f, -5.0f) *
-//		vmath::rotate(225.0f, 0.0f, 1.0f, 0.0f) *
-//		vmath::scale(5.0f);
-//	block->model_matrix = model_matrix;
-//	block->mv_matrix = view_matrix * model_matrix;
-//	block->shadow_matrix = ShadowMatrix(planes->NegX, lightPos);
-//	block->invertNormals = falseVec;
-//
-//	teapot->Draw();
-//#pragma endregion
 }
 
 void assignment3_app::load_shaders()
@@ -588,6 +658,19 @@ void assignment3_app::load_shaders()
 	glAttachShader(projectedShadowProgram, vs);
 	glAttachShader(projectedShadowProgram, fs);
 	glLinkProgram(projectedShadowProgram);
+
+	vs = sb7::shader::load("shadowMap.vs.txt", GL_VERTEX_SHADER);
+	fs = sb7::shader::load("shadowMap.fs.txt", GL_FRAGMENT_SHADER);
+
+	if (shadowMapProgram)
+	{
+		glDeleteProgram(shadowMapProgram);
+	}
+
+	shadowMapProgram = glCreateProgram();
+	glAttachShader(shadowMapProgram, vs);
+	glAttachShader(shadowMapProgram, fs);
+	glLinkProgram(shadowMapProgram);
 }
 
 #pragma region Event Handlers
